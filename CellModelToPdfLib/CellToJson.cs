@@ -156,9 +156,7 @@ namespace CellModelToPdfLib
                         GetCellProp(col, row, sheet, ref cellBorderList, ref width, ref height, ref cellPositionList, pageInfo, ref L);
                         L[0].col = col;
                         L[0].row = row;
-                        L[0].sheet = sheet;
-                        L[0].width = mmmToPixels2(width);
-                        L[0].height = mmmToPixels2(height);
+                        L[0].sheet = sheet;                       
                         L[0].cellAlign = cell.GetCellAlign(col, row, sheet);
                         L[0].str = cell.GetCellString(col, row, sheet).TrimEnd(new char[] { '\r', '\n' }); //尾部的回车不起作用，故去除
                         L[0].stringFormat = new Model.StringFormatX()
@@ -420,6 +418,8 @@ namespace CellModelToPdfLib
                             t1.colSpan = c2 - c1 + 1;
                             t1.x = mmmToPixels2(GetCellX(1, k, sheet));
                             t1.y = mmmToPixels2(GetCellY(pageInfo.startRow, i, sheet));
+                            t1.width = mmmToPixels2(cell.GetColWidth(unitType, k, 0));
+                            t1.height = mmmToPixels2(cell.GetRowHeight(unitType, i, 0));
                             t = t1;
                         }
                         else
@@ -521,6 +521,8 @@ namespace CellModelToPdfLib
                 t1.colSpan = 1;
                 t1.x = mmmToPixels2(GetCellX(1, col, sheet));
                 t1.y = mmmToPixels2(GetCellY(pageInfo.startRow, row, sheet));
+                t1.width = width;
+                t1.height = height;
                 L.Add(t1);
             }
         }

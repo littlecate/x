@@ -252,5 +252,15 @@ namespace CellModelToPdfLib
             var t = JsonConvert.SerializeObject(o);
             return JsonConvert.DeserializeObject<CellInfo>(t);
         }
+
+        internal static double GetCellRangeHeight(CellJson cellJson, int sheet, int row1, int row2)
+        {
+            var t = 0d;
+            for (var row = row1; row <= row2; row++)
+            {
+                t += cellJson.cells.Find(p => p.col == 1 && p.row == row && p.sheet == sheet).height;
+            }
+            return t;
+        }
     }
 }

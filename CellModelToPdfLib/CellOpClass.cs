@@ -251,6 +251,9 @@ namespace CellModelToPdfLib
             var col2 = copyInfo.col2 - chaCol;
             int row2 = copyInfo.row2 - chaRow;
             UnmergeCells(col1, row1, col2, row2);
+            var oldHeight = Comman.GetCellRangeHeight(cellJson, sheet, row1, row2);
+            var newHeight = Comman.GetCellRangeHeight(cellJson, sheet, copyInfo.row1, copyInfo.row2);
+            //UnmergeCells(1, row1, col2, row2);            
             var L1 = Comman.DeepCopyList<CellInfo>(copyInfo.cells);
             var L3 = cellJson.cells.FindAll(p => p.col >= col1 && p.col <= col2 && p.row >= row1 && p.row <= row2);
             var L2 = Comman.DeepCopyList<CellInfo>(L3);
@@ -287,6 +290,7 @@ namespace CellModelToPdfLib
                 cellJson.cells.RemoveAt(index);
                 cellJson.cells.Insert(index, Comman.CopyCellInfo(o));
             }
+            List<string> markHaveDisposedList = new List<string>();
             for (var i = row1; i <= row2; i++)
             {
                 var o = L2.Find(p => p.row == i);
@@ -300,48 +304,152 @@ namespace CellModelToPdfLib
                     o1.height = height;
                     if (o1.cellPostionList != null)
                     {
-                        var L5 = o1.cellPostionList.FindAll(p => p.row == i);
-                        for (var n = 0; n < L5.Count; n++)
+                        var key1 = i + "_" + k + "_" + i;
+                        if (!markHaveDisposedList.Contains(key1))
                         {
-                            L5[n].y = y;
-                            L5[n].height = height;
+                            var L5 = o1.cellPostionList.FindAll(p => p.row == i);
+                            for (var n = 0; n < L5.Count; n++)
+                            {
+                                L5[n].y = y;
+                                L5[n].height = height;
+                            }
+                            markHaveDisposedList.Add(key1);
                         }
                     }
-                }
-            }
-            for (var i = col1; i <= col2; i++)
-            {
-                var o = L2.Find(p => p.col == i);
-                var x = o.x;
-                var width = o.width;
-                var L4 = cellJson.cells.FindAll(p => p.col == i && p.sheet == sheet);
-                for (var k = 0; k < L4.Count; k++)
-                {
-                    var o1 = L4[k];
-                    o1.x = x;
-                    o1.width = width;
-                    if (o1.cellPostionList != null)
+                    if (o1.cellPositionTotal != null)
                     {
-                        var L5 = o1.cellPostionList.FindAll(p => p.col == i);
-                        for (var n = 0; n < L5.Count; n++)
+                        o1.cellPositionTotal.y = y;
+                    }
+                    if (o1.mergeTo != null)
+                    {
+                        var c = o1.mergeTo.col;
+                        var r = o1.mergeTo.row;
+                        if (c != 0 && r != 0)
                         {
-                            L5[n].x = x;
-                            L5[n].width = width;
+                            var oo = cellJson.cells.Find(p => p.col == c && p.row == r && p.sheet == sheet);
+                            if (oo != null)
+                            {
+                                var key = c + "_" + r + "_" + i;
+                                if (!markHaveDisposedList.Contains(key))
+                                {
+                                    var L5 = oo.cellPostionList.FindAll(p => p.row == i);
+                                    for (var n = 0; n < L5.Count; n++)
+                                    {
+                                        L5[n].y = y;
+                                        L5[n].height = height;
+                                    }
+                                    markHaveDisposedList.Add(key);
+                                }
+                            }
                         }
                     }
                 }
             }
-            for (var i = col1; i <= col2; i++)
+            var L8 = cellJson.cells.FindAll(p => p.col >= 1 && p.col <= col2 && p.row >= row1 && p.row <= row2);
+            File.WriteAllText(@"D:\1.txt", JsonConvert.SerializeObject(L8), Encoding.UTF8);
+            //for (var i = col1; i <= col2; i++)
+            //{
+            //    var o = L2.Find(p => p.col == i);
+            //    var x = o.x;
+            //    var width = o.width;
+            //    var L4 = cellJson.cells.FindAll(p => p.col == i && p.sheet == sheet);
+            //    for (var k = 0; k < L4.Count; k++)
+            //    {
+            //        var o1 = L4[k];
+            //        o1.x = x;
+            //        o1.width = width;
+            //        if (o1.cellPostionList != null)
+            //        {
+            //            var L5 = o1.cellPostionList.FindAll(p => p.col == i);
+            //            for (var n = 0; n < L5.Count; n++)
+            //            {
+            //                L5[n].x = x;
+            //                L5[n].width = width;
+            //            }
+            //        }
+            //    }
+            //}
+            markHaveDisposedList.Clear();
+            for (var i = 1; i < cellJson.cols; i++)
             {
                 for (var k = row1; k <= row2; k++)
                 {
-                    var o = cellJson.cells.Find(p => p.col == col1 && p.row == row1 && p.sheet == sheet);
+                    var o = cellJson.cells.Find(p => p.col == i && p.row == k && p.sheet == sheet);
                     if (o.cellPositionTotal != null)
                     {
-                        o.cellPositionTotal.x = o.x;
-                        o.cellPositionTotal.y = o.y;
                         o.cellPositionTotal.width = o.cellPostionList.FindAll(p => p.row == k).Sum<CellPosition>(p => p.width);
                         o.cellPositionTotal.height = o.cellPostionList.FindAll(p => p.col == i).Sum<CellPosition>(p => p.height);
+                    }
+                    if (o.mergeTo != null)
+                    {
+                        var c = o.mergeTo.col;
+                        var r = o.mergeTo.row;
+                        if (c != 0 && r != 0)
+                        {
+                            var key = c + "_" + r;
+                            if (!markHaveDisposedList.Contains(key))
+                            {
+                                var oo = cellJson.cells.Find(p => p.col == c && p.row == r && p.sheet == sheet);
+                                if (oo != null)
+                                {
+                                    oo.cellPositionTotal.width = oo.cellPostionList.FindAll(p => p.row == k).Sum<CellPosition>(p => p.width);
+                                    oo.cellPositionTotal.height = oo.cellPostionList.FindAll(p => p.col == i).Sum<CellPosition>(p => p.height);
+                                }
+                                markHaveDisposedList.Add(key);
+                            }
+                        }
+                    }
+                }
+            }
+            if (row2 + 1 < cellJson.rows)
+            {
+                markHaveDisposedList.Clear();
+                var addHeight = newHeight - oldHeight;
+                for (var k = 1; k < cellJson.cols; k++)
+                {
+                    for (var i = row2 + 1; i < cellJson.rows; i++)
+                    {
+                        var o1 = cellJson.cells.Find(p => p.col == k && p.row == i && p.sheet == sheet);
+                        o1.y += addHeight;
+                        if (o1.cellPostionList != null)
+                        {
+                            var key1 = k + "_" + i + "_" + i;
+                            if (!markHaveDisposedList.Contains(key1))
+                            {
+                                var L5 = o1.cellPostionList.FindAll(p => p.row == i);
+                                for (var n = 0; n < L5.Count; n++)
+                                {
+                                    L5[n].y += addHeight;
+                                }
+                                markHaveDisposedList.Add(key1);
+                            }
+                        }
+                        if (o1.cellPositionTotal != null)
+                        {
+                            o1.cellPositionTotal.y += addHeight;
+                        }
+                        if (o1.mergeTo != null)
+                        {
+                            var c = o1.mergeTo.col;
+                            var r = o1.mergeTo.row;
+                            if (c != 0 && r != 0)
+                            {
+                                var oo = cellJson.cells.Find(p => p.col == c && p.row == r && p.sheet == sheet);
+                                if (oo != null)
+                                {
+                                    var key = c + "_" + r + "_" + i;
+                                    if (!markHaveDisposedList.Contains(key))
+                                    {
+                                        var L5 = oo.cellPostionList.FindAll(p => p.row == i);
+                                        for (var n = 0; n < L5.Count; n++)
+                                        {
+                                            L5[n].y += addHeight;
+                                        }
+                                        markHaveDisposedList.Add(key);
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }

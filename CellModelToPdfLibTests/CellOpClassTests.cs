@@ -44,8 +44,8 @@ namespace CellModelToPdfLib.Tests
         {
             string s = File.ReadAllText(jsonFile, Encoding.UTF8);
             var cellJson = JsonConvert.DeserializeObject<Model.CellJson>(s);
-            var o = new JsonToPdf(cellJson, @"G:\项目\CellModelToPdf\CellModelToPdfLib\bin\Debug");
-            o.start();
+            var o = new JsonToPdf(cellJson, @"D:\项目\CellModelToPdf\CellModelToPdfLib\bin\Debug");
+            o.start(@"D:\项目\CellModelToPdf\CellModelToPdfLibTests\bin\Debug\测试材料\test.pdf");
         }
     }
 }
