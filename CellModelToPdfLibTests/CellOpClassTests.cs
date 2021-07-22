@@ -34,7 +34,7 @@ namespace CellModelToPdfLib.Tests
             //cellOpClass.UnmergeCells(1, 1, 22, 2);
             //cellOpClass.MergeCells(6, 5, 17, 9);
             cellOpClass.CopyRange(6, 5, 17, 9);
-            cellOpClass.Paste(6, 12, 0, 0, 1, 0);
+            cellOpClass.Paste(8, 12, 0, 0, 1, 0);
             cellOpClass.SaveFile(jsonFile1, 1);
             cellOpClass.closefile();
             ConvertToPdf(jsonFile1);
